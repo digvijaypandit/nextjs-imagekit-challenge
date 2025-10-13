@@ -1,13 +1,22 @@
 import {NextResponse} from "next/server";
 
+import {auth} from "@clerk/nextjs/server";
 import {getUploadAuthParams} from "@imagekit/next/server";
 
 import {env} from "@/env";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Your application logic to authenticate the user
-    // For now, we'll allow all uploads, but you can add authentication logic here
+    const {userId} = auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        {error: "You must be logged in to upload images."},
+        {status: 401}
+      );
+    }
+
+    // Generate ImageKit upload auth params
     const {token, expire, signature} = getUploadAuthParams({
       privateKey: env.IMAGEKIT_PRIVATE_KEY,
       publicKey: env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
@@ -18,6 +27,7 @@ export async function GET() {
       expire,
       signature,
       publicKey: env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+      userId,
     });
   } catch (error) {
     console.error("Upload auth error:", error);

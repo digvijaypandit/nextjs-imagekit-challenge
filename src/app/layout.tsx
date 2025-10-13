@@ -1,6 +1,9 @@
 import type {Metadata} from "next";
 import {Geist_Mono, Montserrat, Onest, Puppies_Play} from "next/font/google";
 
+// Import Clerk
+import {ClerkProvider} from "@clerk/nextjs";
+
 import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
 import Providers from "@/components/providers";
@@ -42,20 +45,23 @@ export default function RootLayout({
     >
       <body className="from-background flex h-dvh flex-col overscroll-none bg-gradient-to-b to-pink-300/50 dark:to-pink-950/30">
         <section className="flex h-full flex-col overflow-y-scroll">
-          <Providers>
-            <header className="sticky inset-x-0 top-0 z-50 border-b border-dashed border-rose-100 dark:border-pink-300/20">
-              <Navbar />
-            </header>
+          {/* Wrap your app with ClerkProvider */}
+          <ClerkProvider>
+            <Providers>
+              <header className="sticky inset-x-0 top-0 z-50 border-b border-dashed border-rose-100 dark:border-pink-300/20">
+                <Navbar />
+              </header>
 
-            <main className="mx-auto w-full max-w-7xl flex-grow p-6 lg:px-8">
-              {children}
-            </main>
+              <main className="mx-auto w-full max-w-7xl flex-grow p-6 lg:px-8">
+                {children}
+              </main>
 
-            <footer>
-              <Footer />
-            </footer>
-          </Providers>
-          <Toaster />
+              <footer>
+                <Footer />
+              </footer>
+            </Providers>
+            <Toaster />
+          </ClerkProvider>
         </section>
       </body>
     </html>

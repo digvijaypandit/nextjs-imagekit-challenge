@@ -16,6 +16,7 @@ export const media = pgTable("media", {
     .$type<TransformationConfig>()
     .default({} as TransformationConfig),
   mediaType: mediaTypeEnum("type"),
+  userId: text("user_id").notNull(),
   ...timestamps,
 });
 
@@ -60,6 +61,7 @@ export const mediaQuerySchema = z.object({
   id: z.uuid({message: "Please provide a valid media ID."}),
 });
 
+// --- TypeScript types ---
 export type SelectMediaModel = InferSelectModel<typeof media>;
 export type CreateMediaParams = z.infer<typeof createMediaSchema>;
 export type UpdateMediaParams = z.infer<typeof updateMediaSchema>;
