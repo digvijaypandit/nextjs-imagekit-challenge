@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 import {ImageIcon, VideoIcon} from "lucide-react";
 
@@ -23,6 +23,11 @@ export function PreviewCanvas({
 
   const MediaIcon = mediaType === "VIDEO" ? VideoIcon : ImageIcon;
 
+  useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+  }, [builtUrl]);
+
   return (
     <div className="rounded-xl border border-pink-300/30 dark:border-pink-200/15 bg-transparent backdrop:blur-2xl flex-1 flex flex-col h-full max-h-screen">
       <div className="flex items-center justify-between px-6 pt-6 flex-shrink-0">
@@ -45,18 +50,14 @@ export function PreviewCanvas({
       <div className="flex-1 overflow-hidden p-6 flex items-center justify-center min-h-0">
         <div
           className="relative transition-transform duration-200 ease-out"
-          style={{
-            transform: `scale(${zoom / 100})`,
-          }}
+          style={{transform: `scale(${zoom / 100})`}}
         >
           {mediaType === "IMAGE" ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               key={builtUrl}
               src={builtUrl}
               alt="Transformed preview"
               className="h-[30dvh] md:h-[50dvh] w-auto object-contain select-none shadow-none"
-              style={{transform: `scale(${zoom / 100})`}}
               onLoad={() => setIsLoading(false)}
               onError={() => {
                 setHasError(true);
@@ -69,19 +70,22 @@ export function PreviewCanvas({
               src={builtUrl}
               controls
               className="h-[30dvh] md:h-[50dvh] w-auto object-contain select-none shadow-none"
+              onLoadedData={() => setIsLoading(false)}
               onError={() => {
                 setHasError(true);
                 setIsLoading(false);
               }}
             />
           )}
-          {mediaType === "IMAGE" && isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
+
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm z-10">
               <Spinner className="text-pink-800" />
             </div>
           )}
+
           {hasError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md">
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md z-20">
               <div className="text-center text-gray-500">
                 <MediaIcon className="mx-auto mb-2 size-8" />
                 <p className="text-sm">Failed to load preview</p>

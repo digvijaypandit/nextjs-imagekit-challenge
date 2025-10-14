@@ -153,8 +153,15 @@ function videoOverlaysToParams(overlays: VideoOverlay[]): string[] {
 
 function enhancementsToParams(enh: Enhancements): string[] {
   const parts: string[] = [];
-  if (enh.blur) parts.push(`bl-${enh.blur}`);
-  if (enh.sharpen) parts.push(`e-sharpen-${enh.sharpen}`);
+
+  if (enh.blur !== undefined) parts.push(`bl-${enh.blur}`);
+  if (enh.sharpen !== undefined) parts.push(`e-sharpen-${enh.sharpen}`);
+  if (enh.brightness !== undefined) parts.push(`e-bright-${enh.brightness}`);
+  if (enh.contrast !== undefined) parts.push(`e-contrast-${enh.contrast}`);
+  if (enh.saturation !== undefined)
+    parts.push(`e-saturation-${enh.saturation}`);
+  if (enh.noise !== undefined) parts.push(`e-noise-${enh.noise}`);
+
   if (enh.shadow) {
     const s = enh.shadow;
     const shadowParts: string[] = ["e-shadow"];
@@ -164,17 +171,19 @@ function enhancementsToParams(enh: Enhancements): string[] {
     if (s.offsetY !== undefined) shadowParts.push(`y-${s.offsetY}`);
     parts.push(shadowParts.join("_"));
   }
+
   if (enh.background) {
     const bg = enh.background;
     if (bg.type === "solid" && bg.color) parts.push(`bg-${bg.color}`);
     if (bg.type === "blurred") {
       const val = ["bg-blurred"];
-      if (bg.blurIntensity) val.push(`${bg.blurIntensity}`);
-      if (bg.brightness) val.push(`${bg.brightness}`);
+      if (bg.blurIntensity !== undefined) val.push(`${bg.blurIntensity}`);
+      if (bg.brightness !== undefined) val.push(`${bg.brightness}`);
       parts.push(val.join("_"));
     }
     if (bg.type === "dominant") parts.push("bg-dominant");
   }
+
   return parts;
 }
 

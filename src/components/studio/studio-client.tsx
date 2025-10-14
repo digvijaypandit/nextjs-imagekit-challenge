@@ -95,9 +95,7 @@ export default function StudioClient({media}: StudioClientProps) {
         <TransformPanel
           activeSection={activeSection}
           transforms={history.state}
-          onTransformChange={newTransforms => {
-            history.set(newTransforms);
-          }}
+          onTransformChange={newTransforms => history.set(newTransforms)}
         />
       </section>
 

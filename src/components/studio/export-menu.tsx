@@ -39,20 +39,23 @@ export default function ExportMenu({
         align="end"
         className="w-fit mt-4 z-50 flex flex-col gap-2 backdrop-blur-2xl p-4 bg-white/80 rounded-lg border-1 dark:border-gray-50/10 dark:bg-black/20"
       >
-        <DropdownMenuItem onClick={onCopyBuilt}>
+        <DropdownMenuItem onClick={onCopyBuilt} className="cursor-pointer">
           <Copy className="size-4" />
           Copy transformed URL
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onCopyOriginal}>
+        <DropdownMenuItem onClick={onCopyOriginal} className="cursor-pointer">
           <Copy className="size-4" />
           Copy original URL
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={onDownloadBuilt}>
+        <DropdownMenuItem onClick={onDownloadBuilt} className="cursor-pointer">
           <Download className="size-4" />
           Download transformed
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDownloadOriginal}>
+        <DropdownMenuItem
+          onClick={onDownloadOriginal}
+          className="cursor-pointer"
+        >
           <Download className="size-4" />
           Download original
         </DropdownMenuItem>

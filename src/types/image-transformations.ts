@@ -95,17 +95,21 @@ export type Overlay = ImageOverlay | TextOverlay | GradientBlock | SolidBlock;
 export type Enhancements = {
   blur?: number; // bl (0–100)
   sharpen?: number; // e-sharpen (0–10)
+  brightness?: number; // br (0–200) or your scale
+  contrast?: number; // ct (0–200)
+  saturation?: number; // st (0–200)
+  noise?: number; // ns (0–100)
   shadow?: {
-    blur?: number; // bl
-    saturation?: number; // st
-    offsetX?: number; // x
-    offsetY?: number; // y
+    blur?: number;
+    saturation?: number;
+    offsetX?: number;
+    offsetY?: number;
   };
   background?: {
     type: "solid" | "blurred" | "dominant";
-    color?: string; // for solid
-    blurIntensity?: number | "auto"; // for blurred
-    brightness?: number; // -255 to 255
+    color?: string;
+    blurIntensity?: number | "auto";
+    brightness?: number;
   };
 };
 

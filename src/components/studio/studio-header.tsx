@@ -1,4 +1,6 @@
-import {Redo2, RotateCcw, Undo2, Vote} from "lucide-react";
+import {useRouter} from "next/navigation";
+
+import {Home, Redo2, RotateCcw, Undo2, Vote} from "lucide-react";
 
 import ExportMenu from "@/components/studio/export-menu";
 import {Button} from "@/components/ui/button";
@@ -41,6 +43,8 @@ export function StudioHeader({
   srcUrl,
   savePending = false,
 }: StudioHeaderProps) {
+  const router = useRouter();
+
   return (
     <div className="mx-auto max-md:space-y-6 md:flex max-w-[1400px] items-center gap-2 pb-3 max-md:space-x-2">
       <TooltipProvider>
@@ -87,6 +91,21 @@ export function StudioHeader({
             </Button>
           </TooltipTrigger>
           <TooltipContent>Revert to original</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              className={buttonStyles}
+              style={gradientBg}
+              onClick={() => router.push("/")}
+            >
+              <Home className="size-4" />
+              Home
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Go to Home</TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
