@@ -1,5 +1,21 @@
 import {type SectionKey} from "@/components/studio/dock";
-import {TransformationConfig} from "@/types";
+import {
+  type BasicsTransform as ImageBasicsType,
+  type Enhancements as ImageEnhancementsType,
+  type Overlay as ImageOverlayType,
+} from "@/types/image-transformations";
+import {
+  type AiMagic,
+  type Audio,
+  type TransformationConfig,
+  type Overlay as UnifiedOverlay,
+  type TextOverlay as UnifiedTextOverlay,
+} from "@/types/transformations";
+import {
+  type BasicsTransform as VideoBasicsType,
+  type Enhancements as VideoEnhancementsType,
+  type Overlay as VideoOverlayType,
+} from "@/types/video-transformations";
 
 import {AIMagicPanel} from "./image-ai-magic-panel";
 import {ImageBasicsPanel} from "./image-basics-panel";
@@ -9,6 +25,32 @@ import {VideoAudioPanel} from "./video-audio-panel";
 import {VideoBasicsPanel} from "./video-basics-panel";
 import {VideoEnhancementsPanel} from "./video-enhancements-panel";
 import {VideoOverlayPanel} from "./video-overlay-panel";
+
+function defaultTextOverlay(
+  overrides?: Partial<UnifiedTextOverlay>
+): UnifiedTextOverlay {
+  return {
+    type: "text",
+    text: "",
+    fontSize: 16,
+    fontFamily: "Arial",
+    color: "#000000",
+    backgroundColor: "transparent",
+    align: "left",
+    typography: [],
+    padding: "0",
+    bg: "transparent",
+    radius: 0,
+    rotation: 0,
+    lineHeight: 1.2,
+    opacity: 1,
+    bold: "normal",
+    italic: "normal",
+    strike: "none",
+    flip: false,
+    ...overrides,
+  };
+}
 
 type TransformPanelProps = {
   activeSection: SectionKey;
@@ -44,18 +86,18 @@ export function TransformPanel({
         if (transforms.type === "IMAGE") {
           return (
             <ImageBasicsPanel
-              transforms={transforms.basics || {}}
-              onTransformChange={b =>
-                onTransformChange({...transforms, basics: b})
+              transforms={(transforms.basics as ImageBasicsType) ?? {}}
+              onTransformChange={(updatedBasics: ImageBasicsType) =>
+                onTransformChange({...transforms, basics: updatedBasics})
               }
             />
           );
         } else if (transforms.type === "VIDEO") {
           return (
             <VideoBasicsPanel
-              transforms={transforms.basics || {}}
-              onTransformChange={b =>
-                onTransformChange({...transforms, basics: b})
+              transforms={(transforms.basics as VideoBasicsType) ?? {}}
+              onTransformChange={(updatedBasics: VideoBasicsType) =>
+                onTransformChange({...transforms, basics: updatedBasics})
               }
             />
           );
@@ -63,24 +105,31 @@ export function TransformPanel({
         break;
 
       case "overlays":
+        const overlay =
+          (transforms.overlays?.[0] as UnifiedTextOverlay) ??
+          defaultTextOverlay();
         if (transforms.type === "IMAGE") {
           return (
             <ImageOverlayPanel
-              overlay={transforms.overlays?.[0] ?? {type: "text", text: ""}}
-              onOverlayChange={updatedOverlay => {
-                const updatedOverlays = [updatedOverlay];
-                onTransformChange({...transforms, overlays: updatedOverlays});
-              }}
+              overlay={overlay as ImageOverlayType}
+              onOverlayChange={(updatedOverlay: ImageOverlayType) =>
+                onTransformChange({
+                  ...transforms,
+                  overlays: [updatedOverlay as UnifiedOverlay],
+                })
+              }
             />
           );
         } else if (transforms.type === "VIDEO") {
           return (
             <VideoOverlayPanel
-              overlay={transforms.overlays?.[0] ?? {type: "text", text: ""}}
-              onOverlayChange={updatedOverlay => {
-                const updatedOverlays = [updatedOverlay];
-                onTransformChange({...transforms, overlays: updatedOverlays});
-              }}
+              overlay={overlay as VideoOverlayType}
+              onOverlayChange={(updatedOverlay: VideoOverlayType) =>
+                onTransformChange({
+                  ...transforms,
+                  overlays: [updatedOverlay as UnifiedOverlay],
+                })
+              }
             />
           );
         }
@@ -90,18 +139,32 @@ export function TransformPanel({
         if (transforms.type === "IMAGE") {
           return (
             <ImageEnhancementsPanel
-              enhancements={transforms.enhancements || {}}
-              onEnhancementsChange={e =>
-                onTransformChange({...transforms, enhancements: e})
+              enhancements={
+                (transforms.enhancements as ImageEnhancementsType) ?? {}
+              }
+              onEnhancementsChange={(
+                updatedEnhancements: ImageEnhancementsType
+              ) =>
+                onTransformChange({
+                  ...transforms,
+                  enhancements: updatedEnhancements,
+                })
               }
             />
           );
         } else if (transforms.type === "VIDEO") {
           return (
             <VideoEnhancementsPanel
-              enhancements={transforms.enhancements || {}}
-              onEnhancementsChange={e =>
-                onTransformChange({...transforms, enhancements: e})
+              enhancements={
+                (transforms.enhancements as VideoEnhancementsType) ?? {}
+              }
+              onEnhancementsChange={(
+                updatedEnhancements: VideoEnhancementsType
+              ) =>
+                onTransformChange({
+                  ...transforms,
+                  enhancements: updatedEnhancements,
+                })
               }
             />
           );
@@ -111,8 +174,10 @@ export function TransformPanel({
       case "ai":
         return (
           <AIMagicPanel
-            aiMagic={transforms.ai || {}}
-            onAIMagicChange={a => onTransformChange({...transforms, ai: a})}
+            aiMagic={transforms.ai ?? {}}
+            onAIMagicChange={(updatedAiMagic: AiMagic) =>
+              onTransformChange({...transforms, ai: updatedAiMagic})
+            }
           />
         );
 
@@ -120,8 +185,10 @@ export function TransformPanel({
         if (transforms.type === "VIDEO") {
           return (
             <VideoAudioPanel
-              audio={transforms.audio || {}}
-              onAudioChange={a => onTransformChange({...transforms, audio: a})}
+              audio={transforms.audio ?? {}}
+              onAudioChange={(updatedAudio: Audio) =>
+                onTransformChange({...transforms, audio: updatedAudio})
+              }
             />
           );
         } else {

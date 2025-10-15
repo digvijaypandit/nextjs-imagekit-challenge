@@ -63,9 +63,9 @@ export type TextOverlay = {
   backgroundColor?: string; // bg
   padding?: string; // pa shorthand
   align?: "left" | "center" | "right"; // lfo
-  bold?: boolean;
-  italic?: boolean;
-  strike?: boolean;
+  bold?: string;
+  italic?: string;
+  strike?: string;
   rotation?: number; // rt
   flip?: FlipMode; // fl
 };
