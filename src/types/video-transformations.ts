@@ -57,6 +57,7 @@ export type ImageOverlay = OverlayBase & {
   bg?: string; // bg
   radius?: number | "max"; // r
   rotation?: number; // rt
+  opacity: number;
 };
 
 export type TextOverlay = OverlayBase & {
@@ -65,6 +66,7 @@ export type TextOverlay = OverlayBase & {
   fontSize?: number | string; // fs
   fontFamily?: string; // ff
   color?: string; // co
+  backgroundColor?: string; // co
   align?: "left" | "center" | "right"; // ia
   typography?: ("b" | "i" | "strikethrough")[]; // tg
   padding?: number | string; // pa
@@ -72,6 +74,11 @@ export type TextOverlay = OverlayBase & {
   radius?: number; // r
   rotation?: number; // rt
   lineHeight?: number | string; // lh
+  opacity: number;
+  bold: string;
+  italic: string;
+  strike: string;
+  flip: boolean;
 };
 
 export type SolidBlock = OverlayBase & {
@@ -79,7 +86,7 @@ export type SolidBlock = OverlayBase & {
   color: string; // bg
   width?: number | string;
   height?: number | string;
-  opacity?: number; // al 1–9
+  opacity: number; // al 1–9
   radius?: number | "max";
 };
 
@@ -88,6 +95,7 @@ export type VideoOverlay = OverlayBase & {
   src: string; // i / ie
   width?: number | string;
   height?: number | string;
+  opacity: number;
 };
 
 export type Overlay = ImageOverlay | TextOverlay | SolidBlock | VideoOverlay;

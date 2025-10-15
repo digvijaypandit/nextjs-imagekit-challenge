@@ -41,7 +41,7 @@ export function AIMagicPanel({aiMagic, onAIMagicChange}: AIMagicPanelProps) {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-2 scrollbar-thin scrollbar-thumb-gray-300">
+    <div className="h-full flex flex-col space-y-2 md:overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300">
       <Accordion type="multiple">
         {/* Background Removal */}
         <AccordionItem value="background-removal">

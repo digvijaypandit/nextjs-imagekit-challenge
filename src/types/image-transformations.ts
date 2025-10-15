@@ -72,10 +72,10 @@ export type TextOverlay = {
 
 export type GradientBlock = {
   type: "gradient";
-  direction?: number | string; // ld
+  direction?: string; // ld
   fromColor?: string; // from
   toColor?: string; // to
-  stopPoint?: number | string; // sp
+  stopPoint?: number; // sp
   width?: number; // w
   height?: number; // h
   radius?: number; // r
@@ -84,13 +84,31 @@ export type GradientBlock = {
 export type SolidBlock = {
   type: "solid";
   color: string; // bg
+  backgroundColor?: string;
   width?: number;
   height?: number;
   opacity?: number;
   radius?: number;
 };
 
-export type Overlay = ImageOverlay | TextOverlay | GradientBlock | SolidBlock;
+export type ResetAll = {
+  type: undefined;
+  text: undefined;
+  src: undefined;
+  fromColor: undefined;
+  toColor: undefined;
+  color: undefined;
+  width: undefined;
+  height: undefined;
+  opacity: undefined;
+};
+
+export type Overlay =
+  | ImageOverlay
+  | TextOverlay
+  | GradientBlock
+  | SolidBlock
+  | ResetAll;
 
 export type Enhancements = {
   blur?: number; // bl (0–100)

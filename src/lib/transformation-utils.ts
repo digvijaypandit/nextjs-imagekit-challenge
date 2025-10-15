@@ -13,18 +13,15 @@ import {
 } from "@/types/video-transformations";
 
 /* ---------------- BASICS ---------------- */
-
 function basicsToParams(basics: BasicsTransform): string[] {
   const parts: string[] = [];
   if (basics.width) parts.push(`w-${basics.width}`);
   if (basics.height) parts.push(`h-${basics.height}`);
   if (basics.aspectRatio) parts.push(`ar-${basics.aspectRatio}`);
-  if (basics.cropMode) parts.push(`c-${basics.cropMode}`);
+  if (basics.cropMode) parts.push(`cm-${basics.cropMode}`);
   if (basics.focus) parts.push(`fo-${basics.focus}`);
   if (basics.zoom !== undefined) parts.push(`z-${basics.zoom}`);
   if (basics.dpr) parts.push(`dpr-${basics.dpr}`);
-  if (basics.x !== undefined) parts.push(`x-${basics.x}`);
-  if (basics.y !== undefined) parts.push(`y-${basics.y}`);
   if (basics.xc !== undefined) parts.push(`xc-${basics.xc}`);
   if (basics.yc !== undefined) parts.push(`yc-${basics.yc}`);
   return parts;
@@ -35,7 +32,7 @@ function videoBasicsToParams(b: VideoBasics): string[] {
   if (b.width) p.push(`w-${b.width}`);
   if (b.height) p.push(`h-${b.height}`);
   if (b.aspectRatio) p.push(`ar-${b.aspectRatio}`);
-  if (b.cropMode) p.push(`c-${b.cropMode}`);
+  if (b.cropMode) p.push(`cm-${b.cropMode}`);
   if (b.focus) p.push(`fo-${b.focus}`);
   if (b.rotate !== undefined) p.push(`rt-${b.rotate}`);
   if (b.border) p.push(`b-${b.border}`);
@@ -45,18 +42,16 @@ function videoBasicsToParams(b: VideoBasics): string[] {
 }
 
 /* ---------------- OVERLAYS ---------------- */
-
 function overlaysToParams(overlays: Overlay[]): string[] {
   const parts: string[] = [];
 
   overlays.forEach(o => {
     if (o.type === "image") {
-      const params: string[] = ["l-image"];
-      params.push(`i-${o.src}`);
+      const params: string[] = ["l-image", `i-${o.src}`];
       if (o.width) params.push(`w-${o.width}`);
       if (o.height) params.push(`h-${o.height}`);
-      if (o.x !== undefined) params.push(`x-${o.x}`);
-      if (o.y !== undefined) params.push(`y-${o.y}`);
+      if (o.x !== undefined) params.push(`lx-${o.x}`);
+      if (o.y !== undefined) params.push(`ly-${o.y}`);
       if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
       if (o.bgColor) params.push(`bg-${o.bgColor}`);
       if (o.border) params.push(`b-${o.border}`);
@@ -68,12 +63,12 @@ function overlaysToParams(overlays: Overlay[]): string[] {
     }
 
     if (o.type === "text") {
-      const params: string[] = ["l-text"];
-      params.push(`i-${encodeURIComponent(o.text)}`);
+      const params: string[] = ["l-text", `i-${encodeURIComponent(o.text)}`];
       if (o.fontSize) params.push(`fs-${o.fontSize}`);
       if (o.fontFamily) params.push(`ff-${o.fontFamily}`);
-      if (o.color) params.push(`co-${o.color}`);
-      if (o.backgroundColor) params.push(`bg-${o.backgroundColor}`);
+      if (o.color) params.push(`co-${o.color.replace("#", "")}`);
+      if (o.backgroundColor)
+        params.push(`bg-${o.backgroundColor.replace("#", "")}`);
       if (o.padding) params.push(`pa-${o.padding}`);
       if (o.align) params.push(`lfo-${o.align}`);
       if (o.bold) params.push("b-true");
@@ -86,25 +81,33 @@ function overlaysToParams(overlays: Overlay[]): string[] {
     }
 
     if (o.type === "gradient") {
-      const params: string[] = ["l-image", "i-ik_canvas", "e-gradient"];
-      if (o.direction !== undefined) params.push(`ld-${o.direction}`);
-      if (o.fromColor) params.push(`from-${o.fromColor}`);
-      if (o.toColor) params.push(`to-${o.toColor}`);
-      if (o.stopPoint !== undefined) params.push(`sp-${o.stopPoint}`);
-      if (o.width) params.push(`w-${o.width}`);
-      if (o.height) params.push(`h-${o.height}`);
-      if (o.radius) params.push(`r-${o.radius}`);
+      const params: string[] = ["l-image", "i-ik_canvas"];
+
+      let gradient = "e-gradient";
+
+      if (o.direction) gradient += `-ld-${o.direction.replace("-", "_")}`;
+      if (o.fromColor) gradient += `_from-${o.fromColor.replace("#", "")}`;
+      if (o.toColor) gradient += `_to-${o.toColor.replace("#", "")}`;
+      if (o.stopPoint !== undefined) gradient += `_sp-${o.stopPoint / 100}`;
+
+      params.push(gradient);
+
+      if (o.width !== undefined) params.push(`w-${o.width}`);
+      if (o.height !== undefined) params.push(`h-${o.height}`);
+      if (o.radius !== undefined) params.push(`r-${o.radius}`);
+
       params.push("l-end");
       parts.push(params.join(","));
     }
 
     if (o.type === "solid") {
       const params: string[] = ["l-image", "i-ik_canvas"];
-      if (o.color) params.push(`bg-${o.color}`);
-      if (o.width) params.push(`w-${o.width}`);
-      if (o.height) params.push(`h-${o.height}`);
+      if (o.color) params.push(`bg-${o.color.replace("#", "")}`);
       if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
-      if (o.radius) params.push(`r-${o.radius}`);
+      if (o.width !== undefined) params.push(`w-${o.width}`);
+      if (o.height !== undefined) params.push(`h-${o.height}`);
+      if (o.radius !== undefined) params.push(`r-${o.radius}`);
+
       params.push("l-end");
       parts.push(params.join(","));
     }
@@ -116,51 +119,87 @@ function overlaysToParams(overlays: Overlay[]): string[] {
 function videoOverlaysToParams(overlays: VideoOverlay[]): string[] {
   const parts: string[] = [];
   overlays.forEach(o => {
-    const p: string[] = [];
-    if (o.type === "image") {
-      p.push("l-image", `i-${o.src}`);
-      if (o.width) p.push(`w-${o.width}`);
-      if (o.height) p.push(`h-${o.height}`);
-    } else if (o.type === "video") {
-      p.push("l-video", `i-${o.src}`);
-      if (o.width) p.push(`w-${o.width}`);
-      if (o.height) p.push(`h-${o.height}`);
-    } else if (o.type === "text") {
-      p.push("l-text", `i-${encodeURIComponent(o.text)}`);
-      if (o.fontSize) p.push(`fs-${o.fontSize}`);
-      if (o.fontFamily) p.push(`ff-${o.fontFamily}`);
-      if (o.color) p.push(`co-${o.color}`);
-      if (o.padding) p.push(`pa-${o.padding}`);
-    } else if (o.type === "solid") {
-      p.push("l-image", "i-ik_canvas", `bg-${o.color}`);
-      if (o.width) p.push(`w-${o.width}`);
-      if (o.height) p.push(`h-${o.height}`);
-      if (o.radius) p.push(`r-${o.radius}`);
+    switch (o.type) {
+      case "text": {
+        const params: string[] = ["l-text", `i-${encodeURIComponent(o.text)}`];
+
+        // Safe and supported parameters
+        if (o.fontSize) params.push(`fs-${o.fontSize}`);
+        if (o.fontFamily) params.push(`ff-${o.fontFamily}`);
+        if (o.color) params.push(`co-${o.color.replace("#", "")}`);
+        if (o.backgroundColor)
+          params.push(`bg-${o.backgroundColor.replace("#", "")}`);
+        if (o.align) params.push(`ia-${o.align}`);
+        if (o.x !== undefined) params.push(`lx-${o.x}`);
+        if (o.y !== undefined) params.push(`ly-${o.y}`);
+        if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
+
+        // Only include these if strictly true
+        if (o.bold === "true") params.push("b-true");
+        if (o.italic === "true") params.push("i-true");
+        if (o.strike === "true") params.push("s-true");
+
+        if (o.rotation !== undefined) params.push(`rt-${o.rotation}`);
+        if (o.flip) params.push("fl-h"); // only horizontal flip supported
+
+        params.push("l-end");
+        parts.push(params.join(","));
+        break;
+      }
+
+      case "image": {
+        const params: string[] = ["l-image", `i-${encodeURIComponent(o.src)}`];
+        if (o.width) params.push(`w-${o.width}`);
+        if (o.height) params.push(`h-${o.height}`);
+
+        params.push("l-end");
+
+        parts.push(params.join(","));
+        break;
+      }
+
+      case "solid": {
+        const params: string[] = ["l-image", "i-ik_canvas"];
+        if (o.color) params.push(`bg-${o.color.replace("#", "")}`);
+        if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
+        if (o.width) params.push(`w-${o.width}`);
+        if (o.height) params.push(`h-${o.height}`);
+        if (o.radius !== undefined) params.push(`r-${o.radius}`);
+        if (o.x !== undefined) params.push(`lx-${o.x}`);
+        if (o.y !== undefined) params.push(`ly-${o.y}`);
+        params.push("l-end");
+        parts.push(params.join(","));
+        break;
+      }
+
+      case "video": {
+        const params: string[] = ["l-video", `i-${encodeURIComponent(o.src)}`];
+        if (o.width) params.push(`w-${o.width}`);
+        if (o.height) params.push(`h-${o.height}`);
+        if (o.x !== undefined) params.push(`lx-${o.x}`);
+        if (o.y !== undefined) params.push(`ly-${o.y}`);
+        if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
+        params.push("l-end");
+        parts.push(params.join(","));
+        break;
+      }
     }
-    // shared overlay controls
-    if (o.x) p.push(`lx-${o.x}`);
-    if (o.y) p.push(`ly-${o.y}`);
-    if (o.startOffset) p.push(`lso-${o.startOffset}`);
-    if (o.endOffset) p.push(`leo-${o.endOffset}`);
-    if (o.duration) p.push(`ldu-${o.duration}`);
-    p.push("l-end");
-    parts.push(p.join(","));
   });
+
   return parts;
 }
 
 /* ---------------- ENHANCEMENTS ---------------- */
-
 function enhancementsToParams(enh: Enhancements): string[] {
   const parts: string[] = [];
 
   if (enh.blur !== undefined) parts.push(`bl-${enh.blur}`);
-  if (enh.sharpen !== undefined) parts.push(`e-sharpen-${enh.sharpen}`);
-  if (enh.brightness !== undefined) parts.push(`e-bright-${enh.brightness}`);
-  if (enh.contrast !== undefined) parts.push(`e-contrast-${enh.contrast}`);
+  if (enh.sharpen !== undefined) parts.push("e-sharpen");
+  if (enh.brightness !== undefined) parts.push(`e-bright:${enh.brightness}`);
+  if (enh.contrast !== undefined) parts.push(`e-contrast:${enh.contrast}`);
   if (enh.saturation !== undefined)
-    parts.push(`e-saturation-${enh.saturation}`);
-  if (enh.noise !== undefined) parts.push(`e-noise-${enh.noise}`);
+    parts.push(`e-saturation:${enh.saturation}`);
+  if (enh.noise !== undefined) parts.push(`e-noise:${enh.noise}`);
 
   if (enh.shadow) {
     const s = enh.shadow;
@@ -189,16 +228,12 @@ function enhancementsToParams(enh: Enhancements): string[] {
 
 function videoEnhancementsToParams(enh: VideoEnhancements): string[] {
   const parts: string[] = [];
-
-  // trimming
   if (enh.trimming) {
     const t = enh.trimming;
     if (t.startOffset !== undefined) parts.push(`so-${t.startOffset}`);
     if (t.endOffset !== undefined) parts.push(`eo-${t.endOffset}`);
     if (t.duration !== undefined) parts.push(`du-${t.duration}`);
   }
-
-  // thumbnail transforms
   if (enh.thumbnail) {
     const th = enh.thumbnail;
     if (th.time !== undefined) parts.push(`so-${th.time}`);
@@ -206,24 +241,19 @@ function videoEnhancementsToParams(enh: VideoEnhancements): string[] {
     if (th.height) parts.push(`h-${th.height}`);
     if (th.aspectRatio) parts.push(`ar-${th.aspectRatio}`);
     if (th.cropMode) {
-      if (["extract", "pad_resize"].includes(th.cropMode))
-        parts.push(`cm-${th.cropMode}`);
-      else parts.push(`c-${th.cropMode}`);
+      parts.push(`cm-${th.cropMode}`);
     }
     if (th.focus) parts.push(`fo-${th.focus}`);
     if (th.border) parts.push(`b-${th.border.width}_${th.border.color}`);
     if (th.bg) parts.push(`bg-${th.bg}`);
     if (th.radius !== undefined) parts.push(`r-${th.radius}`);
   }
-
   return parts;
 }
 
 /* ---------------- AI MAGIC ---------------- */
-
 function aiToParams(ai: AiMagic): string[] {
   const parts: string[] = [];
-
   if (ai.background) {
     const bg = ai.background;
     if (bg.remove) {
@@ -276,7 +306,6 @@ function aiToParams(ai: AiMagic): string[] {
     if (c.width) parts.push(`w-${c.width}`);
     if (c.height) parts.push(`h-${c.height}`);
   }
-
   return parts;
 }
 
@@ -289,7 +318,6 @@ function audioToParams(a: VideoAudio): string[] {
 }
 
 /* ---------------- MASTER BUILDER ---------------- */
-
 export function buildTrString(config: TransformationConfig): string {
   const parts: string[] = [];
 
@@ -300,7 +328,6 @@ export function buildTrString(config: TransformationConfig): string {
     if (config.ai) parts.push(...aiToParams(config.ai));
     if (config.overlays) parts.push(...overlaysToParams(config.overlays));
   }
-
   if (config.type === "VIDEO") {
     if (config.basics) parts.push(...videoBasicsToParams(config.basics));
     if (config.enhancements)
@@ -308,8 +335,7 @@ export function buildTrString(config: TransformationConfig): string {
     if (config.overlays) parts.push(...videoOverlaysToParams(config.overlays));
     if (config.audio) parts.push(...audioToParams(config.audio));
   }
-
-  return parts.filter(Boolean).join(",");
+  return parts.filter(Boolean).join(":");
 }
 
 export function buildImageKitUrl(
@@ -321,7 +347,6 @@ export function buildImageKitUrl(
 
   try {
     const url = new URL(src);
-
     const base = url.origin + url.pathname;
     const search = url.search
       ? `${url.search.replace(/^\?/, "")}&tr=${tr}`

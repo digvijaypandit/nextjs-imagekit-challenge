@@ -1,4 +1,4 @@
-import {Image, Layers, Text} from "lucide-react";
+import {Image, Layers, Text, Video} from "lucide-react";
 
 import {
   Accordion,
@@ -18,29 +18,29 @@ import {
 } from "@/components/ui/select";
 import {Slider} from "@/components/ui/slider";
 import {
-  GradientBlock,
   ImageOverlay,
   Overlay,
   SolidBlock,
   TextOverlay,
-} from "@/types/image-transformations";
+  VideoOverlay,
+} from "@/types/video-transformations";
 
-type OverlayControlsProps = {
+type VideoOverlayControlsProps = {
   overlay: Overlay;
   onOverlayChange: (overlay: Overlay) => void;
 };
 
 const overlayTypes = [
   {label: "Text", value: "text", icon: Text},
+  {label: "Video", value: "video", icon: Video},
   {label: "Image", value: "image", icon: Image},
-  {label: "Gradient", value: "gradient", icon: Layers},
   {label: "Solid", value: "solid", icon: Layers},
 ];
 
-export function ImageOverlayPanel({
+export function VideoOverlayPanel({
   overlay,
   onOverlayChange,
-}: OverlayControlsProps) {
+}: VideoOverlayControlsProps) {
   const update = (patch: Partial<Overlay>) => {
     if ("type" in patch && patch.type !== overlay.type) {
       switch (patch.type) {
@@ -51,11 +51,25 @@ export function ImageOverlayPanel({
             fontFamily: "Roboto",
             color: "#000000",
             backgroundColor: "#FFFFFF",
-            padding: "0",
-            align: "center",
             fontSize: 16,
-            rotation: 0,
+            align: "center",
+            x: 0,
+            y: 0,
+            opacity: 1,
           } as TextOverlay);
+          break;
+        case "video":
+          onOverlayChange({
+            type: "video",
+            src: "",
+            width: 100,
+            height: 100,
+            opacity: 1,
+            x: 0,
+            y: 0,
+            startOffset: 0,
+            duration: undefined,
+          } as VideoOverlay);
           break;
         case "image":
           onOverlayChange({
@@ -63,36 +77,25 @@ export function ImageOverlayPanel({
             src: "",
             width: 100,
             height: 100,
-            opacity: 100,
+            opacity: 1,
             x: 0,
             y: 0,
           } as ImageOverlay);
-          break;
-        case "gradient":
-          onOverlayChange({
-            type: "gradient",
-            fromColor: "#000000",
-            toColor: "#FFFFFF",
-            direction: "top",
-            stopPoint: 0,
-            width: 100,
-            height: 100,
-            radius: 0,
-          } as GradientBlock);
           break;
         case "solid":
           onOverlayChange({
             type: "solid",
             color: "#FFFFFF",
-            opacity: 100,
+            opacity: 1,
             width: 100,
             height: 100,
             radius: 0,
+            x: 0,
+            y: 0,
           } as SolidBlock);
           break;
       }
     } else {
-      // Correctly merge the patch with the existing overlay
       onOverlayChange({...overlay, ...patch});
     }
   };
@@ -100,9 +103,9 @@ export function ImageOverlayPanel({
   function safeEncodeURL(url: string) {
     try {
       const u = new URL(url);
-      return u.toString(); // valid URLs stay as-is
+      return u.toString();
     } catch {
-      return encodeURIComponent(url); // encode if not valid
+      return encodeURIComponent(url);
     }
   }
 
@@ -136,12 +139,15 @@ export function ImageOverlayPanel({
       type: undefined,
       text: undefined,
       src: undefined,
-      fromColor: undefined,
-      toColor: undefined,
       color: undefined,
       width: undefined,
       height: undefined,
       opacity: undefined,
+      x: undefined,
+      y: undefined,
+      startOffset: undefined,
+      endOffset: undefined,
+      duration: undefined,
     });
   };
 
@@ -168,11 +174,25 @@ export function ImageOverlayPanel({
                       fontFamily: "Roboto",
                       color: "#000000",
                       backgroundColor: "#FFFFFF",
-                      padding: "0",
-                      align: "center",
                       fontSize: 16,
-                      rotation: 0,
+                      align: "center",
+                      x: 0,
+                      y: 0,
+                      opacity: 1,
                     } as TextOverlay);
+                    break;
+                  case "video":
+                    onOverlayChange({
+                      type: "video",
+                      src: "",
+                      width: 100,
+                      height: 100,
+                      opacity: 1,
+                      x: 0,
+                      y: 0,
+                      startOffset: 0,
+                      duration: undefined,
+                    } as VideoOverlay);
                     break;
                   case "image":
                     onOverlayChange({
@@ -180,29 +200,21 @@ export function ImageOverlayPanel({
                       src: "",
                       width: 100,
                       height: 100,
-                      opacity: 100,
+                      opacity: 1,
+                      x: 0,
+                      y: 0,
                     } as ImageOverlay);
-                    break;
-                  case "gradient":
-                    onOverlayChange({
-                      type: "gradient",
-                      fromColor: "#000000",
-                      toColor: "#FFFFFF",
-                      direction: "top",
-                      stopPoint: 0,
-                      width: 100,
-                      height: 100,
-                      radius: 0,
-                    } as GradientBlock);
                     break;
                   case "solid":
                     onOverlayChange({
                       type: "solid",
                       color: "#FFFFFF",
-                      opacity: 100,
+                      opacity: 1,
                       width: 100,
                       height: 100,
                       radius: 0,
+                      x: 0,
+                      y: 0,
                     } as SolidBlock);
                     break;
                 }
@@ -229,7 +241,7 @@ export function ImageOverlayPanel({
               <div className="space-y-2">
                 <Label className="font-medium">Text Content</Label>
                 <Input
-                  value={(overlay as TextOverlay).text}
+                  value={(overlay as TextOverlay).text || ""}
                   onChange={e =>
                     update({...(overlay as TextOverlay), text: e.target.value})
                   }
@@ -338,22 +350,6 @@ export function ImageOverlayPanel({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-medium">Padding</Label>
-                  <Input
-                    value={(overlay as TextOverlay).padding ?? "0"}
-                    onChange={e =>
-                      update({
-                        ...(overlay as TextOverlay),
-                        padding: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., 10 or 10_20"
-                    className="h-10"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
                   <Label className="font-medium">Text Alignment</Label>
                   <Select
                     value={(overlay as TextOverlay).align ?? "center"}
@@ -374,26 +370,202 @@ export function ImageOverlayPanel({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="font-medium">Rotation (°)</Label>
+                  <Label className="font-medium">X Position (px)</Label>
                   <Input
                     type="number"
-                    value={safeNumber((overlay as TextOverlay).rotation, 0)}
+                    value={safeNumber((overlay as TextOverlay).x, 0)}
                     onChange={e =>
                       update({
                         ...(overlay as TextOverlay),
-                        rotation: parseInt(e.target.value) || 0,
+                        x: parseInt(e.target.value) || 0,
                       })
                     }
-                    min="-360"
-                    max="360"
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Y Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as TextOverlay).y, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as TextOverlay),
+                        y: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="h-10"
                   />
                 </div>
               </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="font-medium">Opacity</Label>
+                  <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                    {Math.round(((overlay as TextOverlay).opacity ?? 1) * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={[(overlay as TextOverlay).opacity ?? 1]}
+                  onValueChange={([value]) =>
+                    update({
+                      ...(overlay as TextOverlay),
+                      opacity: value,
+                    })
+                  }
+                  className="w-full"
+                />
+              </div>
             </AccordionContent>
           </AccordionItem>
         )}
+
+        {overlay.type === "video" && (
+          <AccordionItem value="video-settings">
+            <AccordionTrigger className="py-3 hover:no-underline">
+              <div className="flex items-center gap-2 font-semibold">
+                <Video className="size-4" /> Video Settings
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4 pt-4 px-1">
+              <div className="space-y-2">
+                <Label className="font-medium">Video URL</Label>
+                <Input
+                  placeholder="https://example.com/video.mp4"
+                  className="h-10"
+                  value={(overlay as VideoOverlay).src || ""}
+                  onChange={e => update({src: safeEncodeURL(e.target.value)})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="font-medium">Width (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as VideoOverlay).width, 100)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as VideoOverlay),
+                        width: parseInt(e.target.value) || 100,
+                      })
+                    }
+                    min="10"
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Height (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as VideoOverlay).height, 100)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as VideoOverlay),
+                        height: parseInt(e.target.value) || 100,
+                      })
+                    }
+                    min="10"
+                    className="h-10"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="font-medium">X Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as VideoOverlay).x, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as VideoOverlay),
+                        x: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Y Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as VideoOverlay).y, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as VideoOverlay),
+                        y: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-10"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="font-medium">Start Offset (ms)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as VideoOverlay).startOffset, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as VideoOverlay),
+                        startOffset: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    min="0"
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Duration (ms)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as VideoOverlay).duration)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as VideoOverlay),
+                        duration: e.target.value
+                          ? parseInt(e.target.value)
+                          : undefined,
+                      })
+                    }
+                    min="0"
+                    placeholder="Auto"
+                    className="h-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="font-medium">Opacity</Label>
+                  <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                    {Math.round(((overlay as VideoOverlay).opacity ?? 1) * 100)}
+                    %
+                  </span>
+                </div>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={[(overlay as VideoOverlay).opacity ?? 1]}
+                  onValueChange={([value]) =>
+                    update({
+                      ...(overlay as VideoOverlay),
+                      opacity: value,
+                    })
+                  }
+                  className="w-full"
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
+
         {overlay.type === "image" && (
           <AccordionItem value="image-settings">
             <AccordionTrigger className="py-3 hover:no-underline">
@@ -404,13 +576,12 @@ export function ImageOverlayPanel({
             <AccordionContent className="space-y-4 pt-4 px-1">
               <div className="space-y-2">
                 <Label className="font-medium">Image URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://example.com/image.jpg"
-                    className="h-10"
-                    onChange={e => update({src: safeEncodeURL(e.target.value)})}
-                  />
-                </div>
+                <Input
+                  placeholder="https://example.com/image.jpg"
+                  className="h-10"
+                  value={(overlay as ImageOverlay).src || ""}
+                  onChange={e => update({src: safeEncodeURL(e.target.value)})}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
@@ -444,20 +615,54 @@ export function ImageOverlayPanel({
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="font-medium">X Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as ImageOverlay).x, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as ImageOverlay),
+                        x: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Y Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as ImageOverlay).y, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as ImageOverlay),
+                        y: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-10"
+                  />
+                </div>
+              </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label className="font-medium">Opacity</Label>
                   <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
-                    {(overlay as ImageOverlay).opacity ?? 100}%
+                    {Math.round(((overlay as ImageOverlay).opacity ?? 1) * 100)}
+                    %
                   </span>
                 </div>
                 <Slider
                   min={0}
-                  max={100}
-                  step={1}
-                  value={[(overlay as ImageOverlay).opacity ?? 100]}
+                  max={1}
+                  step={0.05}
+                  value={[(overlay as ImageOverlay).opacity ?? 1]}
                   onValueChange={([value]) =>
-                    update({...(overlay as ImageOverlay), opacity: value})
+                    update({
+                      ...(overlay as ImageOverlay),
+                      opacity: value,
+                    })
                   }
                   className="w-full"
                 />
@@ -465,160 +670,7 @@ export function ImageOverlayPanel({
             </AccordionContent>
           </AccordionItem>
         )}
-        {overlay.type === "gradient" && (
-          <AccordionItem value="gradient-settings">
-            <AccordionTrigger className="py-3 hover:no-underline">
-              <div className="flex items-center gap-2 font-semibold">
-                <Layers className="size-4" /> Gradient Settings
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-4 px-1">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="font-medium">From Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={(overlay as GradientBlock).fromColor ?? "#000000"}
-                      onChange={e =>
-                        update({
-                          ...(overlay as GradientBlock),
-                          fromColor: e.target.value,
-                        })
-                      }
-                      className="h-10 w-14 cursor-pointer"
-                    />
-                    <Input
-                      type="text"
-                      value={(overlay as GradientBlock).fromColor ?? "#000000"}
-                      onChange={e =>
-                        update({
-                          ...(overlay as GradientBlock),
-                          fromColor: e.target.value,
-                        })
-                      }
-                      className="h-10 flex-1 font-mono text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">To Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={(overlay as GradientBlock).toColor ?? "#FFFFFF"}
-                      onChange={e =>
-                        update({
-                          ...(overlay as GradientBlock),
-                          toColor: e.target.value,
-                        })
-                      }
-                      className="h-10 w-14 cursor-pointer"
-                    />
-                    <Input
-                      type="text"
-                      value={(overlay as GradientBlock).toColor ?? "#FFFFFF"}
-                      onChange={e =>
-                        update({
-                          ...(overlay as GradientBlock),
-                          toColor: e.target.value,
-                        })
-                      }
-                      className="h-10 flex-1 font-mono text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Direction</Label>
-                  <Select
-                    value={(overlay as GradientBlock).direction ?? "top"}
-                    onValueChange={value =>
-                      update({
-                        ...(overlay as GradientBlock),
-                        direction: value,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="top">Top</SelectItem>
-                      <SelectItem value="bottom">Bottom</SelectItem>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                      <SelectItem value="top-left">Top Left</SelectItem>
-                      <SelectItem value="top-right">Top Right</SelectItem>
-                      <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                      <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Stop Point (%)</Label>
-                  <Input
-                    type="number"
-                    value={safeNumber((overlay as GradientBlock).stopPoint, 0)}
-                    min={0}
-                    max={100}
-                    onChange={e =>
-                      update({
-                        ...(overlay as GradientBlock),
-                        stopPoint: Number(e.target.value),
-                      })
-                    }
-                    className="h-10 w-full border px-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Width (px)</Label>
-                  <Input
-                    type="number"
-                    value={safeNumber((overlay as GradientBlock).width, 100)}
-                    min={0}
-                    onChange={e =>
-                      update({
-                        ...(overlay as GradientBlock),
-                        width: Number(e.target.value),
-                      })
-                    }
-                    className="h-10 w-full border px-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Height (px)</Label>
-                  <Input
-                    type="number"
-                    value={safeNumber((overlay as GradientBlock).height, 100)}
-                    min={0}
-                    onChange={e =>
-                      update({
-                        ...(overlay as GradientBlock),
-                        height: Number(e.target.value),
-                      })
-                    }
-                    className="h-10 w-full border px-2"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Radius (px)</Label>
-                  <Input
-                    type="number"
-                    value={safeNumber((overlay as GradientBlock).radius, 0)}
-                    min={0}
-                    onChange={e =>
-                      update({
-                        ...(overlay as GradientBlock),
-                        radius: Number(e.target.value),
-                      })
-                    }
-                    className="h-10 w-full border px-2"
-                  />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        )}
+
         {overlay.type === "solid" && (
           <AccordionItem value="solid-settings">
             <AccordionTrigger className="py-3 hover:no-underline">
@@ -654,7 +706,6 @@ export function ImageOverlayPanel({
                   />
                 </div>
               </div>
-              <div className="space-y-3"></div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
                   <Label className="font-medium">Width (px)</Label>
@@ -702,10 +753,62 @@ export function ImageOverlayPanel({
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="font-medium">X Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as SolidBlock).x, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as SolidBlock),
+                        x: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Y Position (px)</Label>
+                  <Input
+                    type="number"
+                    value={safeNumber((overlay as SolidBlock).y, 0)}
+                    onChange={e =>
+                      update({
+                        ...(overlay as SolidBlock),
+                        y: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="h-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label className="font-medium">Opacity</Label>
+                  <span className="text-sm font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                    {Math.round(((overlay as SolidBlock).opacity ?? 1) * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={[(overlay as SolidBlock).opacity ?? 1]}
+                  onValueChange={([value]) =>
+                    update({
+                      ...(overlay as SolidBlock),
+                      opacity: value,
+                    })
+                  }
+                  className="w-full"
+                />
+              </div>
             </AccordionContent>
           </AccordionItem>
         )}
       </Accordion>
+
       <div className="pt-4 flex gap-2 border-t border-gray-200">
         <Button
           variant="outline"
