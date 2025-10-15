@@ -126,7 +126,7 @@ export type Enhancements = {
   background?: {
     type: "solid" | "blurred" | "dominant";
     color?: string;
-    blurIntensity?: number | "auto";
+    blurIntensity?: number;
     brightness?: number;
   };
 };
