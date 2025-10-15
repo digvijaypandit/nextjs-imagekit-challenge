@@ -54,7 +54,7 @@ export type ImageOverlay = OverlayBase & {
   aspectRatio?: string; // ar
   cropMode?: CropMode; // c/cm
   border?: string; // b
-  bg?: string; // bg
+  bg: string; // bg
   radius?: number | "max"; // r
   rotation?: number; // rt
   opacity: number;
@@ -63,14 +63,14 @@ export type ImageOverlay = OverlayBase & {
 export type TextOverlay = OverlayBase & {
   type: "text";
   text: string; // i / ie
-  fontSize?: number | string; // fs
-  fontFamily?: string; // ff
-  color?: string; // co
-  backgroundColor?: string; // co
-  align?: "left" | "center" | "right"; // ia
+  fontSize: number | string; // fs
+  fontFamily: string; // ff
+  color: string; // co
+  backgroundColor: string; // bg
+  align: "left" | "center" | "right"; // ia
   typography?: ("b" | "i" | "strikethrough")[]; // tg
   padding?: number | string; // pa
-  bg?: string; // bg
+  bg: string; // bg
   radius?: number; // r
   rotation?: number; // rt
   lineHeight?: number | string; // lh

@@ -116,31 +116,76 @@ function overlaysToParams(overlays: Overlay[]): string[] {
   return parts;
 }
 
-function videoOverlaysToParams(overlays: VideoOverlay[]): string[] {
+const isSet = (value: string | number | undefined | null): boolean =>
+  value !== undefined && value !== null && value !== "" && value !== 0;
+
+const encodeInput = (input: string): string => {
+  const simplePattern = /^[a-zA-Z0-9@_.-]+$/;
+
+  if (simplePattern.test(input)) {
+    return `i-${input}`;
+  } else {
+    const base64 = btoa(unescape(encodeURIComponent(input)));
+    return `ie-${encodeURIComponent(base64)}`;
+  }
+};
+
+const formatPosition = (value: number | string): string => {
+  if (typeof value === "number" && value < 0) {
+    return `N${Math.abs(value)}`;
+  }
+  return String(value);
+};
+
+const formatColor = (color: string): string => {
+  return color.replace("#", "");
+};
+
+// Main function matching your original signature
+export function videoOverlaysToParams(overlays: VideoOverlay[]): string[] {
   const parts: string[] = [];
+
   overlays.forEach(o => {
     switch (o.type) {
       case "text": {
-        const params: string[] = ["l-text", `i-${encodeURIComponent(o.text)}`];
+        const params: string[] = ["l-text", encodeInput(o.text)];
 
-        // Safe and supported parameters
-        if (o.fontSize) params.push(`fs-${o.fontSize}`);
-        if (o.fontFamily) params.push(`ff-${o.fontFamily}`);
-        if (o.color) params.push(`co-${o.color.replace("#", "")}`);
-        if (o.backgroundColor)
-          params.push(`bg-${o.backgroundColor.replace("#", "")}`);
-        if (o.align) params.push(`ia-${o.align}`);
-        if (o.x !== undefined) params.push(`lx-${o.x}`);
-        if (o.y !== undefined) params.push(`ly-${o.y}`);
-        if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
+        if (isSet(o.fontSize)) params.push(`fs-${o.fontSize}`);
+        if (isSet(o.fontFamily)) params.push(`ff-${o.fontFamily}`);
+        if (isSet(o.color)) params.push(`co-${formatColor(o.color)}`);
+        if (isSet(o.backgroundColor))
+          params.push(`bg-${formatColor(o.backgroundColor)}`);
+        if (isSet(o.bg)) params.push(`bg-${formatColor(o.bg)}`);
+        if (isSet(o.align)) params.push(`ia-${o.align}`);
+        if (isSet(o.padding)) params.push(`pa-${o.padding}`);
+        if (isSet(o.lineHeight)) params.push(`lh-${o.lineHeight}`);
+        if (isSet(o.radius)) params.push(`r-${o.radius}`);
+        if (isSet(o.rotation)) params.push(`rt-${o.rotation}`);
 
-        // Only include these if strictly true
-        if (o.bold === "true") params.push("b-true");
-        if (o.italic === "true") params.push("i-true");
-        if (o.strike === "true") params.push("s-true");
+        if (o.typography && o.typography.length > 0) {
+          params.push(`tg-${o.typography.join("_")}`);
+        } else {
+          const typoFlags: string[] = [];
+          if (o.bold === "true") typoFlags.push("b");
+          if (o.italic === "true") typoFlags.push("i");
+          if (o.strike === "true") typoFlags.push("strikethrough");
+          if (typoFlags.length > 0) {
+            params.push(`tg-${typoFlags.join("_")}`);
+          }
+        }
 
-        if (o.rotation !== undefined) params.push(`rt-${o.rotation}`);
-        if (o.flip) params.push("fl-h"); // only horizontal flip supported
+        if (isSet(o.opacity)) params.push(`al-${o.opacity}`);
+        if (o.flip) params.push("fl-h");
+
+        // Position
+        if (isSet(o.x)) params.push(`lx-${formatPosition(o.x!)}`);
+        if (isSet(o.y)) params.push(`ly-${formatPosition(o.y!)}`);
+        if (isSet(o.focus)) params.push(`lfo-${o.focus}`);
+
+        // Timing
+        if (isSet(o.startOffset)) params.push(`lso-${o.startOffset}`);
+        if (isSet(o.endOffset)) params.push(`leo-${o.endOffset}`);
+        if (isSet(o.duration)) params.push(`ldu-${o.duration}`);
 
         params.push("l-end");
         parts.push(params.join(","));
@@ -148,37 +193,82 @@ function videoOverlaysToParams(overlays: VideoOverlay[]): string[] {
       }
 
       case "image": {
-        const params: string[] = ["l-image", `i-${encodeURIComponent(o.src)}`];
-        if (o.width) params.push(`w-${o.width}`);
-        if (o.height) params.push(`h-${o.height}`);
+        const params: string[] = ["l-image", encodeInput(o.src)];
+
+        if (isSet(o.width)) params.push(`w-${o.width}`);
+        if (isSet(o.height)) params.push(`h-${o.height}`);
+        if (isSet(o.aspectRatio)) params.push(`ar-${o.aspectRatio}`);
+
+        if (isSet(o.cropMode)) {
+          if (o.cropMode === "extract" || o.cropMode === "pad_resize") {
+            params.push(`cm-${o.cropMode}`);
+          } else {
+            params.push(`c-${o.cropMode}`);
+          }
+        }
+
+        if (isSet(o.border)) params.push(`b-${o.border}`);
+        if (isSet(o.bg)) params.push(`bg-${formatColor(o.bg)}`);
+        if (isSet(o.radius)) params.push(`r-${o.radius}`);
+        if (isSet(o.rotation)) params.push(`rt-${o.rotation}`);
+        if (isSet(o.opacity)) params.push(`al-${o.opacity}`);
+
+        // Position
+        if (isSet(o.x)) params.push(`lx-${formatPosition(o.x!)}`);
+        if (isSet(o.y)) params.push(`ly-${formatPosition(o.y!)}`);
+        if (isSet(o.focus)) params.push(`lfo-${o.focus}`);
+
+        // Timing
+        if (isSet(o.startOffset)) params.push(`lso-${o.startOffset}`);
+        if (isSet(o.endOffset)) params.push(`leo-${o.endOffset}`);
+        if (isSet(o.duration)) params.push(`ldu-${o.duration}`);
 
         params.push("l-end");
-
         parts.push(params.join(","));
         break;
       }
 
       case "solid": {
         const params: string[] = ["l-image", "i-ik_canvas"];
-        if (o.color) params.push(`bg-${o.color.replace("#", "")}`);
-        if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
-        if (o.width) params.push(`w-${o.width}`);
-        if (o.height) params.push(`h-${o.height}`);
-        if (o.radius !== undefined) params.push(`r-${o.radius}`);
-        if (o.x !== undefined) params.push(`lx-${o.x}`);
-        if (o.y !== undefined) params.push(`ly-${o.y}`);
+
+        if (isSet(o.color)) params.push(`bg-${formatColor(o.color)}`);
+        if (isSet(o.width)) params.push(`w-${o.width}`);
+        if (isSet(o.height)) params.push(`h-${o.height}`);
+        if (isSet(o.opacity)) params.push(`al-${o.opacity}`);
+        if (isSet(o.radius)) params.push(`r-${o.radius}`);
+
+        // Position
+        if (isSet(o.x)) params.push(`lx-${formatPosition(o.x!)}`);
+        if (isSet(o.y)) params.push(`ly-${formatPosition(o.y!)}`);
+        if (isSet(o.focus)) params.push(`lfo-${o.focus}`);
+
+        // Timing
+        if (isSet(o.startOffset)) params.push(`lso-${o.startOffset}`);
+        if (isSet(o.endOffset)) params.push(`leo-${o.endOffset}`);
+        if (isSet(o.duration)) params.push(`ldu-${o.duration}`);
+
         params.push("l-end");
         parts.push(params.join(","));
         break;
       }
 
       case "video": {
-        const params: string[] = ["l-video", `i-${encodeURIComponent(o.src)}`];
-        if (o.width) params.push(`w-${o.width}`);
-        if (o.height) params.push(`h-${o.height}`);
-        if (o.x !== undefined) params.push(`lx-${o.x}`);
-        if (o.y !== undefined) params.push(`ly-${o.y}`);
-        if (o.opacity !== undefined) params.push(`o-${o.opacity}`);
+        const params: string[] = ["l-video", encodeInput(o.src)];
+
+        if (isSet(o.width)) params.push(`w-${o.width}`);
+        if (isSet(o.height)) params.push(`h-${o.height}`);
+        if (isSet(o.opacity)) params.push(`al-${o.opacity}`);
+
+        // Position
+        if (isSet(o.x)) params.push(`lx-${formatPosition(o.x!)}`);
+        if (isSet(o.y)) params.push(`ly-${formatPosition(o.y!)}`);
+        if (isSet(o.focus)) params.push(`lfo-${o.focus}`);
+
+        // Timing
+        if (isSet(o.startOffset)) params.push(`lso-${o.startOffset}`);
+        if (isSet(o.endOffset)) params.push(`leo-${o.endOffset}`);
+        if (isSet(o.duration)) params.push(`ldu-${o.duration}`);
+
         params.push("l-end");
         parts.push(params.join(","));
         break;

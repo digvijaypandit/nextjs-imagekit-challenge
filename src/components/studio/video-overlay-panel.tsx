@@ -96,7 +96,7 @@ export function VideoOverlayPanel({
           break;
       }
     } else {
-      onOverlayChange({...overlay, ...patch});
+      onOverlayChange({...overlay, ...patch} as Overlay);
     }
   };
 
@@ -135,24 +135,16 @@ export function VideoOverlayPanel({
   ];
 
   const resetOverlay = () => {
-    onOverlayChange({
-      type: undefined,
-      text: undefined,
-      src: undefined,
-      color: undefined,
-      width: undefined,
-      height: undefined,
-      opacity: undefined,
-      x: undefined,
-      y: undefined,
-      startOffset: undefined,
-      endOffset: undefined,
-      duration: undefined,
-    });
+    onOverlayChange({} as Overlay);
   };
 
-  const safeNumber = (value?: number, fallback = 0) =>
-    value !== undefined && !isNaN(value) ? value : fallback;
+  const safeNumber = (value?: string | number, fallback = 0) => {
+    if (value === undefined || value === null) return fallback;
+
+    const num = typeof value === "string" ? parseFloat(value) : Number(value);
+
+    return isNaN(num) ? fallback : num;
+  };
 
   return (
     <div className="h-full flex flex-col space-y-4 md:overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-300 p-1">
