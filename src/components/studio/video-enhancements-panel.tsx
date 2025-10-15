@@ -143,7 +143,7 @@ export function VideoEnhancementsPanel({
                 step={1}
                 value={[
                   enhancements.trimming?.startOffset
-                    ? Math.min(enhancements.trimming.startOffset, 100)
+                    ? Math.min(Number(enhancements.trimming.startOffset), 100)
                     : 0,
                 ]}
                 onValueChange={([val]) => updateTrimming({startOffset: val})}

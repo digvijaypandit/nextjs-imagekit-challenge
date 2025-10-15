@@ -92,17 +92,16 @@ export function ImageOverlayPanel({
           break;
       }
     } else {
-      // Correctly merge the patch with the existing overlay
-      onOverlayChange({...overlay, ...patch});
+      onOverlayChange({...overlay, ...patch} as Overlay);
     }
   };
 
   function safeEncodeURL(url: string) {
     try {
       const u = new URL(url);
-      return u.toString(); // valid URLs stay as-is
+      return u.toString();
     } catch {
-      return encodeURIComponent(url); // encode if not valid
+      return encodeURIComponent(url);
     }
   }
 
