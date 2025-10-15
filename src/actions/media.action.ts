@@ -1,11 +1,10 @@
 "use server";
 
 import {revalidatePath} from "next/cache";
-import {cookies} from "next/headers";
 import {cache} from "react";
 
 import {auth} from "@clerk/nextjs/server";
-import {count, desc, eq} from "drizzle-orm";
+import {SQL, and, count, desc, eq} from "drizzle-orm";
 
 import {db} from "@/db";
 import {
@@ -28,10 +27,8 @@ export const createMedia = async (
   params: CreateMediaParams
 ): Promise<ActionResponse<SelectMediaModel>> => {
   try {
-    const authResult = await auth({cookies: cookies()});
-    if (!("userId" in authResult) || !authResult.userId)
-      throw new Error("Unauthorized");
-    const {userId} = authResult;
+    const {userId} = await auth();
+    if (!userId) throw new Error("Unauthorized");
 
     const validationResult = await action({
       params,
@@ -72,10 +69,8 @@ export const getMedia = cache(
     params: MediaQueryParams
   ): Promise<ActionResponse<SelectMediaModel>> => {
     try {
-      const authResult = await auth({cookies: cookies()});
-      if (!("userId" in authResult) || !authResult.userId)
-        throw new Error("Unauthorized");
-      const {userId} = authResult;
+      const {userId} = await auth();
+      if (!userId) throw new Error("Unauthorized");
 
       const validationResult = await action({
         params,
@@ -91,7 +86,7 @@ export const getMedia = cache(
       const [mediaItem] = await db
         .select()
         .from(media)
-        .where(eq(media.id, id), eq(media.userId, userId))
+        .where(and(eq(media.id, id), eq(media.userId, userId)))
         .limit(1);
 
       if (!mediaItem) throw new Error("Media not found");
@@ -109,10 +104,8 @@ export const getAllMedia = cache(
     params: PaginatedSearchParams
   ): Promise<ActionResponse<{media: SelectMediaModel[]; isNext: boolean}>> => {
     try {
-      const authResult = await auth({cookies: cookies()});
-      if (!("userId" in authResult) || !authResult.userId)
-        throw new Error("Unauthorized");
-      const {userId} = authResult;
+      const {userId} = await auth();
+      if (!userId) throw new Error("Unauthorized");
 
       const validationResult = await action({
         params,
@@ -128,23 +121,25 @@ export const getAllMedia = cache(
       const limit = Number(pageSize);
 
       const whereCondition = [
-        eq(media.userId, userId), // always filter by logged-in user
+        eq(media.userId, userId),
         filter
           ? eq(media.mediaType, filter.toUpperCase() as "IMAGE" | "VIDEO")
           : undefined,
       ].filter(Boolean);
 
+      const conditions: SQL<unknown>[] = [eq(media.userId, userId)];
+
       const [totalResult] = await db
         .select({count: count()})
         .from(media)
-        .where(...whereCondition);
+        .where(and(...conditions));
 
       const totalCount = totalResult?.count || 0;
 
       const mediaItems = await db
         .select()
         .from(media)
-        .where(...whereCondition)
+        .where(and(...conditions))
         .orderBy(desc(media.createdAt))
         .offset(skip)
         .limit(limit);
@@ -158,15 +153,12 @@ export const getAllMedia = cache(
   }
 );
 
-// --- UPDATE MEDIA (ONLY OWNER) ---
 export const updateMedia = async (
   params: UpdateMediaParams
 ): Promise<ActionResponse<SelectMediaModel>> => {
   try {
-    const authResult = await auth({cookies: cookies()});
-    if (!("userId" in authResult) || !authResult.userId)
-      throw new Error("Unauthorized");
-    const {userId} = authResult;
+    const {userId} = await auth();
+    if (!userId) throw new Error("Unauthorized");
 
     const validationResult = await action({
       params,
@@ -182,7 +174,7 @@ export const updateMedia = async (
     const [updatedMedia] = await db
       .update(media)
       .set({transformedUrl, transformationConfig})
-      .where(eq(media.id, id), eq(media.userId, userId)) // only owner can update
+      .where(and(eq(media.id, id), eq(media.userId, userId)))
       .returning();
 
     if (!updatedMedia) throw new Error("Media not found or failed to update");
